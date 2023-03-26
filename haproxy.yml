@@ -1,0 +1,11 @@
+---
+- name: Install HAProxy
+  remote_user: ubuntu
+  become: true
+  hosts: all
+  vars:
+    ansible_connection: ssh
+    ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+    nginx_servers: "{{ lookup('file', 'hosts') | trim }}"
+  roles:
+  - haproxy

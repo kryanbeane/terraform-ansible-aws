@@ -1,0 +1,29 @@
+---
+- hosts: all
+  remote_user: ubuntu
+  become: true
+  tasks:
+  - name: Install OpenSSH server
+    apt:
+      name: openssh-server
+      state: present
+      
+  - name: Add SSH rules to iptables
+    ufw:
+      rule: allow
+      name: OpenSSH
+
+  - name: Enable UFW firewall
+    ufw:
+      state: enabled
+  - name: Enable SSH tunneling
+    lineinfile:
+      dest: /etc/ssh/sshd_config
+      regexp: '^#?AllowTcpForwarding'
+      line: 'AllowTcpForwarding yes'
+    notify: Restart sshd
+  handlers:
+    - name: Restart sshd
+      service:
+        name: sshd
+        state: restarted

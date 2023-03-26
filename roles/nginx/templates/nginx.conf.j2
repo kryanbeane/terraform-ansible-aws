@@ -1,0 +1,17 @@
+server {
+    listen 80;
+    server_name {{ ansible_hostname }};
+  
+    root /var/www/html;
+    index index.html index.htm;
+  
+    location / {
+      # Add headers
+      add_header X-Server-Hostname "{{ ansible_hostname }}";
+      add_header X-Server-IP "{{ ansible_default_ipv4.address }}";
+  
+      # Serve index page
+      try_files $uri $uri/ /index.html;
+    }
+  }
+  

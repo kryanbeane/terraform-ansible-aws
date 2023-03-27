@@ -7,7 +7,7 @@
     apt:
       name: openssh-server
       state: present
-      
+
   - name: Add SSH rules to iptables
     ufw:
       rule: allow
@@ -16,12 +16,20 @@
   - name: Enable UFW firewall
     ufw:
       state: enabled
+
   - name: Enable SSH tunneling
     lineinfile:
       dest: /etc/ssh/sshd_config
       regexp: '^#?AllowTcpForwarding'
       line: 'AllowTcpForwarding yes'
     notify: Restart sshd
+
+  - name: Copy SSH key to bastion host
+    copy:
+      src: ./terraformansiblekey.pem
+      dest: /home/ubuntu/.ssh/terraformansiblekey.pem
+      mode: '0600'
+
   handlers:
     - name: Restart sshd
       service:

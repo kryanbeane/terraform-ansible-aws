@@ -36,7 +36,8 @@ resource "aws_instance" "nginx_1" {
     environment = {
       ANSIBLE_HOST_KEY_CHECKING = "false"
     }
-    command = "ansible-playbook -i ${aws_instance.nginx_1.public_ip}, --private-key terraformansiblekey.pem nginx.yml"
+    working_dir = "./roles/nginx/tasks"
+    command = "ansible-playbook -i ${aws_instance.nginx_1.public_ip}, --private-key ../../../terraformansiblekey.pem main.yml -e 'nginx_ip=${aws_instance.nginx_1.public_ip}'"
   }
 }
 
@@ -71,7 +72,8 @@ resource "aws_instance" "nginx_2" {
     environment = {
       ANSIBLE_HOST_KEY_CHECKING = "false"
     }
-    command = "ansible-playbook -i ${aws_instance.nginx_2.public_ip}, --private-key terraformansiblekey.pem nginx.yml"
+    working_dir = "./roles/nginx/tasks"
+    command = "ansible-playbook -i ${aws_instance.nginx_2.public_ip}, --private-key ../../../terraformansiblekey.pem main.yml -e 'nginx_ip=${aws_instance.nginx_2.public_ip}'"
   }
 }
 
@@ -124,7 +126,8 @@ resource "aws_instance" "haproxy" {
     environment = {
       ANSIBLE_HOST_KEY_CHECKING = "false"
     }
-    command = "ansible-playbook -i hosts --private-key terraformansiblekey.pem haproxy.yml"
+    working_dir = "./roles/haproxy/tasks"
+    command = "ansible-playbook -i ${aws_instance.haproxy.public_ip}, --private-key ../../../terraformansiblekey.pem main.yml --extra-vars '{\"web_server_ips\": [\"${aws_instance.nginx_1.public_ip}\", \"${aws_instance.nginx_2.public_ip}\"]}'"
   }
 }
 
@@ -143,12 +146,9 @@ data "aws_ami" "ubuntu" {
  owners = ["099720109477"]
 }
 
-
-
-
 # ---------------- Private WebServer Code ---------------- #
 
-# Create a bastion host
+#Create a bastion host
 # resource "aws_instance" "bastion" {
 #   depends_on = [
 #     aws_instance.nginx_1,
@@ -159,8 +159,8 @@ data "aws_ami" "ubuntu" {
 #   instance_type = var.haproxy_instance_type
 #   key_name = aws_key_pair.aws_key.key_name
 #   associate_public_ip_address = true
-#   subnet_id                   = aws_subnet.public[0].id
-#   vpc_security_group_ids      = [aws_security_group.haproxy.id]
+#   subnet_id                   = aws_subnet.public.id
+#   vpc_security_group_ids      = [aws_security_group.terraformansible-securitygroup.id]
 
 #   tags = {
 #     Name = "bastion"
@@ -186,19 +186,5 @@ data "aws_ami" "ubuntu" {
 #     user        = "ubuntu"
 #     private_key = tls_private_key.key.private_key_pem
 #     host        = aws_instance.bastion.public_ip
-#   }
-
-#   provisioner "local-exec" {
-#     command = "ansible-playbook -i '${aws_instance.nginx_1.private_ip},' --private-key terraformansiblekey.pem nginx.yml"
-#     environment = {
-#       ANSIBLE_HOST_KEY_CHECKING = "false"
-#     }
-#   }
-
-#   provisioner "local-exec" {
-#     command = "ansible-playbook -i '${aws_instance.nginx_2.private_ip},' --private-key terraformansiblekey.pem nginx.yml"
-#     environment = {
-#       ANSIBLE_HOST_KEY_CHECKING = "false"
-#     }
 #   }
 # }

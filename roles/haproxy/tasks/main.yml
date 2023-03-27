@@ -1,16 +1,24 @@
 ---
-- name: Install HAProxy
-  apt:
-    name: haproxy
-    state: present
+- name: Install and configure HAProxy
+  remote_user: ubuntu
+  become: true
+  hosts: all
+  vars:
+    haproxy_config_file: /etc/haproxy/haproxy.cfg
+  tasks:
+    - name: Install HAProxy
+      apt:
+        name: haproxy
+        state: present
 
-- name: Configure HAProxy
-  template:
-    src: template/haproxy.cfg.j2
-    dest: /etc/haproxy/haproxy.cfg
-  notify:
-    - restart haproxy
-- name: restart haproxy
-  systemd:
-    name: haproxy
-    state: restarted
+    - name: Copy HAProxy configuration file
+      template:
+        src: ../templates/haproxy.cfg.j2
+        dest: "{{ haproxy_config_file }}"
+      vars:
+        web_server_ips: "{{ extra_vars.web_server_ips }}"
+
+    - name: Restart HAProxy
+      service:
+        name: haproxy
+        state: restarted

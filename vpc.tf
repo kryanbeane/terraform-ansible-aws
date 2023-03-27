@@ -18,6 +18,19 @@ resource "aws_subnet" "public" {
   }
 }
 
+# resource "aws_subnet" "private" {
+#   cidr_block = var.private_subnet_cidr_block
+#   vpc_id     = aws_vpc.vpc.id
+
+#   map_public_ip_on_launch = false
+
+#   tags = {
+#     Name = "private-subnet"
+#   }
+# }
+
+
+
 resource "aws_security_group" "terraformansible-securitygroup" {
   name_prefix = "terraformansible"
   vpc_id      = aws_vpc.vpc.id

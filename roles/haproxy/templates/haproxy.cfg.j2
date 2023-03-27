@@ -1,21 +1,29 @@
 global
+  log /dev/log local0
+  log /dev/log local1 notice
+  chroot /var/lib/haproxy
+  stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
+  stats timeout 30s
+  user haproxy
+  group haproxy
   daemon
-  maxconn 256
 
 defaults
+  log global
   mode http
-  timeout connect 5000ms
-  timeout client 50000ms
-  timeout server 50000ms
+  option httplog
+  option dontlognull
+  timeout connect 5000
+  timeout client 50000
+  timeout server 50000
 
-frontend http_front
+frontend http-in
   bind *:80
-  mode http
-  default_backend http_back
+  default_backend servers
 
-backend http_back
-  mode http
+backend servers
+  mode http 
   balance roundrobin
-  {% for server in nginx_servers.split('\n') %}
-  server nginx{{ loop.index }} {{ server }}:80 check
+  {% for web_server_ip in web_server_ips %}
+  server web{{ loop.index }} {{ web_server_ip }}:80 check
   {% endfor %}
